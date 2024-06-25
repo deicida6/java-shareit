@@ -27,7 +27,7 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public Collection<Item> searchItem(@RequestParam(defaultValue = "") String text){
+    public Collection<Item> searchItem(@RequestParam(defaultValue = "") String text) {
         return itemService.getByName(text);
     }
 

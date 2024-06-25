@@ -14,17 +14,17 @@ import java.util.Collection;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ItemServiceImpl implements ItemService{
+public class ItemServiceImpl implements ItemService {
     private final ItemStorage itemStorage;
     private final UserStorage userStorage;
 
     @Override
     public Item create(Long userId, Item item) {
-        if(userId == null) {
+        if (userId == null) {
             log.error("Не указан владелец");
             throw new RuntimeException("Не указан владелец");
         }
-        if(userStorage.getById(userId) == null) {
+        if (userStorage.getById(userId) == null) {
             log.error("Пользователь с таким Id {} не найден", userId);
             throw new NotFoundException("Пользователя с таким Id " + userId + " не существует");
         }
@@ -45,7 +45,7 @@ public class ItemServiceImpl implements ItemService{
             log.error("Объект с таким Id {} не найден", itemId);
             throw new NotFoundException("Объект с таким Id " + itemId + " не найден");
         }
-        if (!itemStorage.getById(itemId).getOwner().equals(userId)){
+        if (!itemStorage.getById(itemId).getOwner().equals(userId)) {
             log.error("У пользователя {}, нет такого объекта {}", userId, itemId);
             throw new NotFoundException("Не найден объект");
         }
@@ -70,8 +70,7 @@ public class ItemServiceImpl implements ItemService{
     public Item getById(Long itemId) {
         if (itemStorage.getById(itemId) != null) {
             return itemStorage.getById(itemId);
-        }
-        else {
+        } else {
             log.error("Объект с таким Id {} не найден", itemId);
             throw new NotFoundException("Объект с таким Id " + itemId + " не найден");
         }
@@ -87,10 +86,9 @@ public class ItemServiceImpl implements ItemService{
 
     @Override
     public Collection<Item> getAll(Long userId) {
-        if (userStorage.getById(userId) != null){
+        if (userStorage.getById(userId) != null) {
             return itemStorage.getAll(userId);
-        }
-        else {
+        } else {
             log.error("Пользователь с таким Id {} не найден", userId);
             throw new NotFoundException("Пользователь с таким Id " + userId + " не найден");
         }
