@@ -13,12 +13,12 @@ import java.util.Collection;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final UserStorage userDto;
+    private final UserStorage userStorage;
 
     @Override
     public User create(User user) {
         if (isEmailUnique(user.getEmail())) {
-            return userDto.create(user);
+            return userStorage.create(user);
         } else {
             log.error("Пользователь с таким Email {} уже существует", user.getEmail());
             throw new AlreadyExistsException("Пользователь с таким Email " + user.getEmail() + " уже существует");
@@ -27,27 +27,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User update(Long userId, User user) {
-        if (userDto.getById(userId) != null) {
-            if (userDto.getById(userId).getEmail().equals(user.getEmail())) {
+        if (userStorage.getById(userId) != null) {
+            if (userStorage.getById(userId).getEmail().equals(user.getEmail())) {
                 if (user.getName() == null) {
-                    user.setName(userDto.getById(userId).getName());
+                    user.setName(userStorage.getById(userId).getName());
                 }
                 if (user.getId() == null) {
                     user.setId(userId);
                 }
-                return userDto.update(userId, user);
+                return userStorage.update(userId, user);
             }
             if (isEmailUnique(user.getEmail())) {
                 if (user.getEmail() == null) {
-                    user.setEmail(userDto.getById(userId).getEmail());
+                    user.setEmail(userStorage.getById(userId).getEmail());
                 }
                 if (user.getName() == null) {
-                    user.setName(userDto.getById(userId).getName());
+                    user.setName(userStorage.getById(userId).getName());
                 }
                 if (user.getId() == null) {
                     user.setId(userId);
                 }
-                return userDto.update(userId, user);
+                return userStorage.update(userId, user);
             } else {
                 log.error("Пользователь с таким Email {} уже существует", user.getEmail());
                 throw new AlreadyExistsException("Пользователь с таким Email " + user.getEmail() + " уже существует");
@@ -60,8 +60,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User delete(Long userId) {
-        if (userDto.getById(userId) != null) {
-            return userDto.delete(userId);
+        if (userStorage.getById(userId) != null) {
+            return userStorage.delete(userId);
         } else {
             log.error("Пользователь с таким Id {} не найден", userId);
             throw new NotFoundException("Пользователь с таким Id " + userId + " не найден");
@@ -70,21 +70,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getById(Long userId) {
-        if (userDto.getById(userId) != null) {
-            return userDto.getById(userId);
-        } else {
+        User user = userStorage.getById(userId);
+        if (user == null) {
             log.error("Пользователь с таким Id {} не найден", userId);
             throw new NotFoundException("Пользователь с таким Id " + userId + " не найден");
         }
+        return user;
     }
 
     @Override
     public Collection<User> getAll() {
-        return userDto.getAll();
+        return userStorage.getAll();
     }
 
     private boolean isEmailUnique(String email) {
-        for (User user : userDto.getAll()) {
+        for (User user : userStorage.getAll()) {
             if (user.getEmail().equals(email)) {
                 return false;
             }

@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.model;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
 
@@ -18,7 +19,9 @@ public class Item {
     private String name;
     @NotBlank(message = "Описание не может быть пустое")
     private String description;
+    @NotNull(message = "Не может отсуствовать значение доступности")
     private Boolean available;
+    @NotNull(message = "Не может отсуствовать автор")
     private Long owner;
     private Long request;
 }

@@ -3,7 +3,6 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.AvailableItemException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserStorage;
@@ -20,17 +19,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Item create(Long userId, Item item) {
-        if (userId == null) {
-            log.error("Не указан владелец");
-            throw new RuntimeException("Не указан владелец");
-        }
         if (userStorage.getById(userId) == null) {
             log.error("Пользователь с таким Id {} не найден", userId);
             throw new NotFoundException("Пользователя с таким Id " + userId + " не существует");
-        }
-        if (item.getAvailable() == null) {
-            log.error("Не указан статус объекта при создании");
-            throw new AvailableItemException("Не указан статус объекта при создании");
         }
         return itemStorage.create(userId,item);
     }
@@ -68,12 +59,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Item getById(Long itemId) {
-        if (itemStorage.getById(itemId) != null) {
-            return itemStorage.getById(itemId);
-        } else {
+        Item item = itemStorage.getById(itemId);
+        if (item == null) {
             log.error("Объект с таким Id {} не найден", itemId);
             throw new NotFoundException("Объект с таким Id " + itemId + " не найден");
         }
+        return item;
     }
 
     @Override
@@ -87,7 +78,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Collection<Item> getAll(Long userId) {
         if (userStorage.getById(userId) != null) {
-            return itemStorage.getAll(userId);
+            return itemStorage.getAllByUserId(userId);
         } else {
             log.error("Пользователь с таким Id {} не найден", userId);
             throw new NotFoundException("Пользователь с таким Id " + userId + " не найден");

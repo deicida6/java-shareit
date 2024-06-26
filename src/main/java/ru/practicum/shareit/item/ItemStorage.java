@@ -13,5 +13,5 @@ public interface ItemStorage {
 
     public Collection<Item> getByName(String text);
 
-    public Collection<Item> getAll(Long userId);
+    public Collection<Item> getAllByUserId(Long userId);
 }

@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.model.Item;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,14 +47,10 @@ public class InMemoryItemStorage implements ItemStorage {
     }
 
     @Override
-    public Collection<Item> getAll(Long userId) {
-        Collection<Item> itemsFiltred = new ArrayList<>();
-        for (Item item : itemMap.values()) {
-            if (item.getOwner().equals(userId)) {
-                itemsFiltred.add(item);
-            }
-        }
-        return itemsFiltred;
+    public Collection<Item> getAllByUserId(Long userId) {
+        return itemMap.values().stream()
+                .filter(it -> it.getOwner().equals(userId))
+                .collect(Collectors.toList());
     }
 
     private Long getNextId() {

@@ -4,7 +4,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
 public class ItemMapper {
-    public static Item fromItemDto(ItemDto itemDto, long owner) {
+    public static Item fromItemDto(ItemDto itemDto, Long owner) {
         return Item.builder().id(itemDto.getId())
                 .name(itemDto.getName())
                 .description(itemDto.getDescription())
