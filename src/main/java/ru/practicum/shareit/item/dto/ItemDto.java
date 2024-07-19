@@ -2,24 +2,25 @@ package ru.practicum.shareit.item.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.springframework.validation.annotation.Validated;
+import ru.practicum.shareit.booking.dto.BookingItemDto;
+
+import java.util.Collection;
 
 @Data
 @Validated
-@EqualsAndHashCode
 @Builder(toBuilder = true)
-@AllArgsConstructor
 public class ItemDto {
     private Long id;
-    @NotBlank(message = "Имя не может быть пустое")
+    @NotBlank
     private String name;
-    @NotBlank(message = "Описание не может быть пустое")
+    @NotBlank
     private String description;
-    @NotNull(message = "Не может отсуствовать значение доступности")
+    @NotNull
     private Boolean available;
-    private Long request;
+    private BookingItemDto lastBooking;
+    private BookingItemDto nextBooking;
+    private Collection<CommentDto> comments;
 }

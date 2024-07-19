@@ -1,27 +1,38 @@
 package ru.practicum.shareit.item.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-import org.springframework.validation.annotation.Validated;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
-/**
- * TODO Sprint add-controllers.
- */
+@Entity
+@Table(name = "items")
+@Builder
 @Data
-@Validated
-@EqualsAndHashCode
-@Builder(toBuilder = true)
 @AllArgsConstructor
+@NoArgsConstructor
 public class Item {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotBlank(message = "Имя не может быть пустое")
+    @NotBlank
+    @Column(name = "name", nullable = false)
     private String name;
-    @NotBlank(message = "Описание не может быть пустое")
+    @NotBlank
+    @Column(name = "description", nullable = false)
     private String description;
-    @NotNull(message = "Не может отсуствовать значение доступности")
+    @NotNull
+    @Column(name = "is_available", nullable = false)
     private Boolean available;
-    @NotNull(message = "Не может отсуствовать автор")
-    private Long owner;
-    private Long request;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
+    @ManyToOne
+    @JoinColumn(name = "request_id")
+    private ItemRequest request;
 }

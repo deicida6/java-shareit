@@ -1,10 +1,11 @@
 package ru.practicum.shareit.user;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.AlreadyExistsException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
@@ -13,55 +14,36 @@ import java.util.Collection;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
     @Override
-    public User create(User user) {
-        if (isEmailUnique(user.getEmail())) {
-            return userStorage.create(user);
-        } else {
-            log.error("Пользователь с таким Email {} уже существует", user.getEmail());
-            throw new AlreadyExistsException("Пользователь с таким Email " + user.getEmail() + " уже существует");
-        }
+    @Transactional
+    public UserDto create(UserDto userDto) {
+            return UserMapper.toUserDto(userRepository.save(UserMapper.fromUserDto(userDto)));
     }
 
     @Override
-    public User update(Long userId, User user) {
-        if (userStorage.getById(userId) != null) {
-            if (userStorage.getById(userId).getEmail().equals(user.getEmail())) {
-                if (user.getName() == null) {
-                    user.setName(userStorage.getById(userId).getName());
+    @Transactional
+    public User update(Long userId, User newUser) {
+        User oldUser = userRepository.findById(userId).orElseThrow(() ->
+                new NotFoundException("Пользователь с таким Id " + userId + " не найден"));
+                if (newUser.getName() == null) {
+                    newUser.setName(oldUser.getName());
                 }
-                if (user.getId() == null) {
-                    user.setId(userId);
+                if (newUser.getEmail() == null) {
+                    newUser.setEmail(oldUser.getEmail());
                 }
-                return userStorage.update(userId, user);
-            }
-            if (isEmailUnique(user.getEmail())) {
-                if (user.getEmail() == null) {
-                    user.setEmail(userStorage.getById(userId).getEmail());
+                if (newUser.getId() == null) {
+                    newUser.setId(oldUser.getId());
                 }
-                if (user.getName() == null) {
-                    user.setName(userStorage.getById(userId).getName());
-                }
-                if (user.getId() == null) {
-                    user.setId(userId);
-                }
-                return userStorage.update(userId, user);
-            } else {
-                log.error("Пользователь с таким Email {} уже существует", user.getEmail());
-                throw new AlreadyExistsException("Пользователь с таким Email " + user.getEmail() + " уже существует");
-            }
-        } else {
-            log.error("Пользователь с таким Id {} не найден", userId);
-            throw new NotFoundException("Пользователь с таким Id " + userId + " не найден");
-        }
+                    return userRepository.save(newUser);
     }
 
     @Override
-    public User delete(Long userId) {
-        if (userStorage.getById(userId) != null) {
-            return userStorage.delete(userId);
+    @Transactional
+    public void delete(Long userId) {
+        if (userRepository.findById(userId).isPresent()) {
+            userRepository.deleteById(userId);
         } else {
             log.error("Пользователь с таким Id {} не найден", userId);
             throw new NotFoundException("Пользователь с таким Id " + userId + " не найден");
@@ -70,25 +52,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getById(Long userId) {
-        User user = userStorage.getById(userId);
-        if (user == null) {
-            log.error("Пользователь с таким Id {} не найден", userId);
-            throw new NotFoundException("Пользователь с таким Id " + userId + " не найден");
-        }
-        return user;
+        return userRepository.findById(userId).orElseThrow(() ->
+                new NotFoundException("Пользователь с таким Id " + userId + " не найден"));
     }
 
     @Override
     public Collection<User> getAll() {
-        return userStorage.getAll();
+        return userRepository.findAll();
     }
 
-    private boolean isEmailUnique(String email) {
-        for (User user : userStorage.getAll()) {
-            if (user.getEmail().equals(email)) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

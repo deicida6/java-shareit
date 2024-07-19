@@ -1,23 +1,29 @@
 package ru.practicum.shareit.user.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
-import org.springframework.validation.annotation.Validated;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * TODO Sprint add-controllers.
  */
 @Data
-@Validated
-@EqualsAndHashCode
 @Builder(toBuilder = true)
 @AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "users")
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
-    @NotBlank(message = "Имя не может быть пустое")
+    @Column(name = "name", nullable = false)
     private String name;
     @Email
-    @NotBlank(message = "Почта не может быть пустая")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 }
