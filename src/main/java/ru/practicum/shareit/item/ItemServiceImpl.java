@@ -3,7 +3,6 @@ package ru.practicum.shareit.item;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import ru.practicum.shareit.booking.BookingRepository;
@@ -24,7 +23,6 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
@@ -46,7 +44,6 @@ public class ItemServiceImpl implements ItemService {
         Item oldItem = itemRepository.findById(itemId).orElseThrow(() ->
                 new NotFoundException("Объект с таким Id " + itemId + " не найден"));
         if (!oldItem.getOwner().getId().equals(userId)) {
-            log.error("У пользователя {}, нет такого объекта {}", userId, itemId);
             throw new NotFoundException("Не найден объект");
         }
         if (newItem.getName() == null) {
