@@ -29,6 +29,9 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     @Override
     public BookingRequestDto addBooking(BookingCreateDto bookingCreateDto, Long userId) {
+        if (bookingCreateDto.getEnd().isBefore(bookingCreateDto.getStart()) || bookingCreateDto.getEnd().isEqual(bookingCreateDto.getStart())) {
+            throw new ValidationException("Конец букинга не может равняться или быть раньше начала");
+        }
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new NotFoundException("Нет юзера с таким ID = " + userId));
         Item item = itemRepository.findById(bookingCreateDto.getItemId()).orElseThrow(() ->
@@ -39,12 +42,9 @@ public class BookingServiceImpl implements BookingService {
         if (!item.getAvailable()) {
             throw new AvailableItemException("Вещь с id " + bookingCreateDto.getItemId() + " не доступна");
         }
-        if (bookingCreateDto.getEnd().isBefore(bookingCreateDto.getStart()) || bookingCreateDto.getEnd().isEqual(bookingCreateDto.getStart())) {
-            throw new ValidationException("Конец букинга не может равняться или быть раньше начала");
-        }
         Booking booking = BookingMapper.toBooking(bookingCreateDto,user,item);
         booking.setStatus(Status.WAITING);
-            return BookingMapper.toBookingRequestDto(bookingRepository.save(booking));
+        return BookingMapper.toBookingRequestDto(bookingRepository.save(booking));
     }
 
     @Transactional
@@ -59,10 +59,9 @@ public class BookingServiceImpl implements BookingService {
             throw new AvailableItemException("Нельзя апрувнуть или отклонить, статус не Waiting");
         }
         booking.setStatus(approved ? Status.APPROVED : Status.REJECTED);
-            return BookingMapper.toBookingRequestDto(bookingRepository.save(booking));
+        return BookingMapper.toBookingRequestDto(bookingRepository.save(booking));
     }
 
-    @Transactional
     @Override
     public BookingRequestDto getById(Long bookingId, Long userId) {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
@@ -73,7 +72,6 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toBookingRequestDto(booking);
     }
 
-    @Transactional
     @Override
     public Collection<BookingRequestDto> getAllBookingsByUser(Long userId, String state) {
         State bookingState;
@@ -95,7 +93,6 @@ public class BookingServiceImpl implements BookingService {
         return BookingMapper.toListBookingRequestDto(bookings);
     }
 
-    @Transactional
     @Override
     public Collection<BookingRequestDto> getAllBookingsAllItemsByOwner(Long userId, String state) {
         State bookingState;
