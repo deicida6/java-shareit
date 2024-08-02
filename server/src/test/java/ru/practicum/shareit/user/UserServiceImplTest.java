@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.practicum.shareit.exception.AlreadyExistsException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
@@ -31,8 +33,8 @@ class UserServiceImplTest {
         userService = new UserServiceImpl(userRepository);
         user = User.builder()
                 .id(1L)
-                .name("TestUserName")
-                .email("UserEmail@test.com")
+                .name("Test")
+                .email("Email@test.com")
                 .build();
         userDto = UserMapper.toUserDto(user);
 
@@ -43,11 +45,13 @@ class UserServiceImplTest {
 
     @Test
     void getAll() {
-        List<UserDto> result = UserMapper.toListUserDto(userService.getAll()).stream().toList();
+        List<UserDto> result = userService.getAll().stream()
+                .map(UserMapper::toUserDto)
+                .toList();
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(result.getFirst().getId(), userDto.getId());
-        Assertions.assertEquals(result.getFirst().getName(), userDto.getName());
-        Assertions.assertEquals(result.getFirst().getEmail(), userDto.getEmail());
+        Assertions.assertEquals(result.get(0).getId(), userDto.getId());
+        Assertions.assertEquals(result.get(0).getName(), userDto.getName());
+        Assertions.assertEquals(result.get(0).getEmail(), userDto.getEmail());
         verify(userRepository, times(1)).findAll();
     }
 
@@ -62,12 +66,43 @@ class UserServiceImplTest {
     }
 
     @Test
+    void createUserAlreadyExists() {
+        userService.create(userDto);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        Assertions.assertThrows(AlreadyExistsException.class, () -> userService.create(userDto));
+        verify(userRepository, times(1)).save(any());
+    }
+
+
+    @Test
+    public void getUserNotExist() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        Assertions.assertThrows(NotFoundException.class, () -> userService.getById(1L));
+        verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
     void update() {
         User result = userService.update(user.getId(), user);
         Assertions.assertNotNull(result);
         Assertions.assertEquals(result.getId(), userDto.getId());
         Assertions.assertEquals(result.getName(), userDto.getName());
         Assertions.assertEquals(result.getEmail(), userDto.getEmail());
+        verify(userRepository, times(1)).save(any());
+    }
+
+    @Test
+    public void updateUserNotExist() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        Assertions.assertThrows(NotFoundException.class, () -> userService.update(3L,user));
+        verify(userRepository, times(1)).findById(any());
+    }
+
+    @Test
+    void updateUserAlreadyExists() {
+        userService.create(userDto);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        Assertions.assertThrows(AlreadyExistsException.class, () -> userService.update(userDto.getId(), user));
         verify(userRepository, times(1)).save(any());
     }
 
@@ -85,5 +120,12 @@ class UserServiceImplTest {
     void delete() {
         userService.delete(user.getId());
         verify(userRepository, times(1)).deleteById(anyLong());
+    }
+
+    @Test
+    public void deleteUserNotExist() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        Assertions.assertThrows(NotFoundException.class, () -> userService.delete(1L));
+        verify(userRepository, times(1)).findById(any());
     }
 }

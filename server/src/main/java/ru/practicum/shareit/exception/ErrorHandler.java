@@ -27,15 +27,6 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleNoFinishBookingForCommentException(NoFinishBookingForCommentException e) {
-        return new ErrorResponse(
-                "Не закончен букинг для комментария.",
-                e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFoundException(final NotFoundException e) {
         return new ErrorResponse(

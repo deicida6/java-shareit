@@ -10,6 +10,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -34,15 +35,9 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findByEmail(newUser.getEmail()).isPresent()) {
             throw new AlreadyExistsException("Пользователь с таким e-mail = " + newUser.getEmail() + " уже существует!");
         }
-        if (newUser.getName() == null) {
-            newUser.setName(oldUser.getName());
-        }
-        if (newUser.getEmail() == null) {
-            newUser.setEmail(oldUser.getEmail());
-        }
-        if (newUser.getId() == null) {
-            newUser.setId(oldUser.getId());
-        }
+        newUser.setName(Optional.ofNullable(newUser.getName()).orElse(oldUser.getName()));
+        newUser.setEmail(Optional.ofNullable(newUser.getEmail()).orElse(oldUser.getEmail()));
+        newUser.setId(Optional.ofNullable(newUser.getId()).orElse(oldUser.getId()));
         return userRepository.save(newUser);
     }
 

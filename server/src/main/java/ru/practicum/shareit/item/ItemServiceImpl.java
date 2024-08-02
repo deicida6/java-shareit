@@ -21,6 +21,7 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,19 +63,10 @@ public class ItemServiceImpl implements ItemService {
         if (!oldItem.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Не найден объект");
         }
-        if (newItem.getName() == null) {
-            newItem.setName(oldItem.getName());
-        }
-        if (newItem.getDescription() == null) {
-            newItem.setDescription(oldItem.getDescription());
-        }
-        if (newItem.getId() == null) {
-            newItem.setId(itemId);
-        }
-
-        if (newItem.getAvailable() == null) {
-            newItem.setAvailable(oldItem.getAvailable());
-        }
+        newItem.setName(Optional.ofNullable(newItem.getName()).orElse(oldItem.getName()));
+        newItem.setDescription(Optional.ofNullable(newItem.getDescription()).orElse(oldItem.getDescription()));
+        newItem.setId(Optional.ofNullable(newItem.getId()).orElse(itemId));
+        newItem.setAvailable(Optional.ofNullable(newItem.getAvailable()).orElse(oldItem.getAvailable()));
         newItem.setOwner(oldItem.getOwner());
         return itemRepository.save(newItem);
     }

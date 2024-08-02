@@ -98,7 +98,6 @@ class ItemRequestServiceImplTest {
         Assertions.assertEquals(result.getRequester(), itemRequestDto.getRequester());
         Assertions.assertEquals(result.getId(), itemRequestDto.getId());
         verify(itemRequestRepository, times(1)).findByIdOrderByCreatedAsc(anyLong());
-
     }
 
     @Test
