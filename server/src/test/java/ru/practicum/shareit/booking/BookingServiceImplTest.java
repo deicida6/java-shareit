@@ -413,4 +413,40 @@ class BookingServiceImplTest {
 
         assertEquals("Пользователя нет с таким id = " + owner.getId(), exception.getMessage());
     }
+
+    @Test
+    void getAllBookingsAllItemsByOwnerCurrentState() {
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        when(bookingRepository.findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfterOrderByStartDesc(owner.getId(), now, now)).thenReturn(Collections.singletonList(booking));
+
+        Collection<BookingRequestDto> result = bookingService.getAllBookingsAllItemsByOwner(owner.getId(), "CURRENT");
+
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void getAllBookingsAllItemsByOwnerFutureState() {
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        when(bookingRepository.findAllByItemOwnerIdAndStartIsAfterOrderByStartDesc(owner.getId(), now)).thenReturn(Collections.singletonList(booking));
+
+        Collection<BookingRequestDto> result = bookingService.getAllBookingsAllItemsByOwner(owner.getId(), "FUTURE");
+
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void getAllBookingsAllItemsByOwnerPastState() {
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        when(bookingRepository.findAllByItemOwnerIdAndEndIsBeforeOrderByStartDesc(owner.getId(), now)).thenReturn(Collections.singletonList(booking));
+
+        Collection<BookingRequestDto> result = bookingService.getAllBookingsAllItemsByOwner(owner.getId(), "PAST");
+
+        assertEquals(0, result.size());
+    }
 }

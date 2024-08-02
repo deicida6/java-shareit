@@ -10,6 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -21,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -35,6 +38,9 @@ class ItemControllerTest {
 
     @InjectMocks
     private ItemController controller;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private MockMvc mvc;
@@ -164,5 +170,36 @@ class ItemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
         verify(itemService, times(1)).searchItem(anyString());
+    }
+
+    @Test
+    void getByIdNotFound() throws Exception {
+        when(itemService.getById(anyLong(), anyLong())).thenThrow(new NotFoundException("Item not found"));
+
+        mvc.perform(get("/items/{itemId}", 1L)
+                        .header(ItemController.HEADER, 1L))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateNotFound() throws Exception {
+        when(itemService.update(anyLong(), anyLong(), any(Item.class))).thenThrow(new NotFoundException("Item not found"));
+
+        mvc.perform(patch("/items/{itemId}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(ItemController.HEADER, 1L)
+                        .content(objectMapper.writeValueAsString(itemDto)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addCommentNotFound() throws Exception {
+        when(itemService.addComment(anyLong(), anyLong(), any(CommentDto.class))).thenThrow(new NotFoundException("Item not found"));
+
+        mvc.perform(post("/items/{itemId}/comment", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(ItemController.HEADER, 1L)
+                        .content(objectMapper.writeValueAsString(commentDto)))
+                .andExpect(status().isNotFound());
     }
 }

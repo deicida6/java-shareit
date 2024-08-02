@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Comment;
@@ -54,6 +55,7 @@ class ItemServiceImplTest {
     private User owner;
     private Item item;
     private ItemDto itemDto;
+    private Comment comment;
     private CommentDto commentDto;
     private ItemRequest itemRequest;
 
@@ -88,6 +90,14 @@ class ItemServiceImplTest {
                 .build();
 
         itemDto = ItemMapper.toItemDto(item, null, null);
+
+        comment = Comment.builder()
+                .id(1L)
+                .text("Great item!")
+                .item(item)
+                .author(user)
+                .created(LocalDateTime.now())
+                .build();
 
         commentDto = CommentDto.builder()
                 .id(1L)
@@ -249,5 +259,144 @@ class ItemServiceImplTest {
         CommentDto result = itemService.addComment(1L, 1L, commentDto);
         assertNotNull(result);
         verify(commentRepository, times(1)).save(any(Comment.class));
+    }
+
+    @Test
+    void createShouldThrowNotFoundException_WhenUserNotFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.create(user.getId(), itemDto));
+    }
+
+    @Test
+    void updateShouldReturnUpdatedItem() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(owner));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(itemRepository.save(any(Item.class))).thenReturn(item);
+
+        Item result = itemService.update(owner.getId(), item.getId(), item);
+
+        assertNotNull(result);
+        assertEquals(item.getId(), result.getId());
+        verify(itemRepository, times(1)).save(any(Item.class));
+    }
+
+    @Test
+    void updateShouldThrowNotFoundException_WhenUserNotFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.update(user.getId(), item.getId(), item));
+    }
+
+    @Test
+    void updateShouldThrowNotFoundException_WhenItemNotFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.update(user.getId(), item.getId(), item));
+    }
+
+    @Test
+    void getByIdShouldReturnItem() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+
+        ItemDto result = itemService.getById(user.getId(), item.getId());
+
+        assertNotNull(result);
+        assertEquals(item.getId(), result.getId());
+    }
+
+    @Test
+    void getByIdShouldThrowNotFoundExceptionWhenUserNotFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.getById(user.getId(), item.getId()));
+    }
+
+    @Test
+    void getByIdShouldThrowNotFoundExceptionWhenItemNotFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.getById(user.getId(), item.getId()));
+    }
+
+    @Test
+    void searchItemShouldReturnItems() {
+        when(itemRepository.findByNameContainsIgnoringCaseOrDescriptionContainsIgnoringCase(anyString(), anyString()))
+                .thenReturn(Collections.singletonList(item));
+
+        Collection<Item> result = itemService.searchItem("Item");
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertEquals(item.getId(), result.iterator().next().getId());
+    }
+
+    @Test
+    void searchItemShouldReturnEmptyCollectionWhenTextIsEmpty() {
+        Collection<Item> result = itemService.searchItem("");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getAllShouldReturnItems() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findAllByOwnerId(anyLong())).thenReturn(Collections.singletonList(item));
+
+        Collection<ItemDto> result = itemService.getAll(user.getId());
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertEquals(item.getId(), result.iterator().next().getId());
+    }
+
+    @Test
+    void getAllShouldThrowNotFoundExceptionWhenUserNotFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.getAll(user.getId()));
+    }
+
+    @Test
+    void addCommentShouldReturnComment() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(bookingRepository.findAllByBookerIdAndItemIdAndStatusAndEndBefore(anyLong(), anyLong(), eq(Status.APPROVED), any(LocalDateTime.class)))
+                .thenReturn(Collections.singletonList(mock(Booking.class)));
+        when(commentRepository.save(any(Comment.class))).thenReturn(comment);
+
+        CommentDto result = itemService.addComment(user.getId(), item.getId(), commentDto);
+
+        assertNotNull(result);
+        assertEquals(comment.getId(), result.getId());
+    }
+
+    @Test
+    void addCommentShouldThrowNotFoundExceptionWhenUserNotFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.addComment(user.getId(), item.getId(), commentDto));
+    }
+
+    @Test
+    void addCommentShouldThrowNotFoundExceptionWhenItemNotFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.addComment(user.getId(), item.getId(), commentDto));
+    }
+
+    @Test
+    void addCommentShouldThrowValidationExceptionWhenNoBookingFound() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+        when(bookingRepository.findAllByBookerIdAndItemIdAndStatusAndEndBefore(anyLong(), anyLong(), eq(Status.APPROVED), any(LocalDateTime.class)))
+                .thenReturn(Collections.emptyList());
+
+        assertThrows(ValidationException.class, () -> itemService.addComment(user.getId(), item.getId(), commentDto));
     }
 }

@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
+import ru.practicum.shareit.exception.InvalidStateException;
+import ru.practicum.shareit.exception.NotFoundException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -132,5 +134,25 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.start", is(bookingRequestDto.getStart().format(DateTimeFormatter.ISO_DATE_TIME))))
                 .andExpect(jsonPath("$.end", is(bookingRequestDto.getEnd().format(DateTimeFormatter.ISO_DATE_TIME))));
         verify(bookingService, times(1)).getById(anyLong(), anyLong());
+    }
+
+    @Test
+    void getAllBookingsAllItemsByOwnerInvalidState() throws Exception {
+        when(bookingService.getAllBookingsAllItemsByOwner(anyLong(), eq("INVALID"))).thenThrow(new InvalidStateException("Unknown state: INVALID"));
+
+        mvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", 1L)
+                        .param("state", "INVALID"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAllBookingsByUserNotFound() throws Exception {
+        when(bookingService.getAllBookingsByUser(anyLong(), anyString())).thenThrow(new NotFoundException("Пользователя нет с таким id = " + 1L));
+
+        mvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", 1L)
+                        .param("state", "ALL"))
+                .andExpect(status().isNotFound());
     }
 }
