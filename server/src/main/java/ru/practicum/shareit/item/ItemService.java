@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item;
 
-import jakarta.validation.Valid;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -17,7 +16,7 @@ public interface ItemService {
 
     Collection<Item> searchItem(String text);
 
-    CommentDto addComment(Long userId, Long itemId, @Valid CommentDto commentDto);
+    CommentDto addComment(Long userId, Long itemId, CommentDto commentDto);
 
     Collection<ItemDto> getAll(Long userId);
 }
